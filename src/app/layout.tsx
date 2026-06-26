@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 import Link from "next/link";
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -30,11 +32,16 @@ function useIsDark() {
   return isDark
 }*/
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = createClient(await cookies())
+
+  const { data } = await supabase.auth.getUser()
+  const user = data.user
+
   return (
     <html lang="en">
       <body>
@@ -44,9 +51,13 @@ export default function RootLayout({
         <nav>
           <ul>
             <li><Link href="/">Home</Link></li>
-            <li><Link href="/help">Help</Link></li>
+            {user
+              ? <li>Logout</li>
+              : <li><Link href="/account/login">Login</Link></li>
+            }
           </ul>
         </nav>
+        { user ? <p>Hi {user.email}</p> : null}
         <hr />
         <main>
           {children}
